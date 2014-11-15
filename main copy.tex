@@ -1,0 +1,120 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[margin=0.7in]{geometry}
+\usepackage[numbers]{natbib}
+
+\title{Bayesian Models for Machine Learning}
+
+\author{}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent My goal of writing this document is to provide some intuition as well as describe the math behind Bayesian Statistics, especially the areas that intersect with the rapidly expanding field of Machine Learning.
+\end{abstract}
+
+\section{Introduction}
+
+\noindent Most learning to rank systems such as the ones used in popular search companies do not have the luxury to learn a model offline from systematically collected training data. Part of this is because of the sheer volume of queries and results retrieved, but the other reason is that personalized results cannot be easily judged by third-party labellers. To overcome this, training data is built on the fly from user clicks. Such implicit feedback mechanisms however face issues like position bias, where users automatically tend to trust results presented at the higher position more than the ones below. Techniques such as Fair Pairs \citep{radlinski2006minimally} help in addressing this problem by obtaining relative feedback among pairs of results. Another key problem however remains unsolved, which is the issue of sample bias. Typically users only explore the first few pages (highly relevant segment) of the entire result-set, and thus the click feedback is obtained only for highly ranked results. This causes the training data to be heavily biased in terms of features. In other words, the learner only encounters results from a part of the feature space during the training, while the scorer sees all the results during prediction (and quite understandably doesn’t perform as well). \\
+
+\noindent We therefore, ask the following questions - 
+\renewcommand{\labelenumi}{\alph{enumi})}
+\begin{enumerate}
+\item How to address such sample bias in learning to rank? 
+\item How can we leverage existing models deployed in production which are performing reasonably well? 
+\item Can we use an existing model as a proxy for the training data on which it was learnt and incorporate it into the new model?
+\end{enumerate}
+
+\section{Learning from Historical Data}
+Assuming we have an existing model \textit{M} that has been trained on historical data \footnote{Note that we use the terms historical data/model and source data/model interchangeably. Either ways, it refers to an existing data/model which we trust.} \textit{D} (say the click data for past six months), there are two ways to leverage the existing performance and build our new model:
+\begin{itemize}
+\item Get hold of the data \textit{D} on which \textit{M} was trained and combine it with our currently obtained data (say \textit{D’}). Then, obtain a new model \textit{M’} by training it on \{\textit{D}+\textit{D’}\}. However, this approach is not practical because in most of the situations we do not know \textit{D} on which \textit{M} was trained.
+\item Using the model \textit{M} as a proxy for the data D, obtain a new model \textit{M’}  that is not too different \textit{M}. We want to use some form of a distance metric \textit{d(M, M')} (discussed later in section: 2.1 and 2.2) between the models \textit{M} and \textit{M’} that controls how different our new model can be. In addition, \textit{M'} also needs to explore other possible solutions (as our learning problem is non-convex).
+\end{itemize}
+
+\noindent We hypothesize that both the above mentioned approaches should provide us similar results.
+
+\subsection{tKL Divergence as a Regularizer}
+We use \textit{tKL divergence} \citep{liu2011total} as a distance metric to compute the difference between models \textit{M} and \textit{M'}. tKL divergence is an improved version of the \textit{KL divergence} measure, adding additional desirable properties such as intrinsic robustness to noise and outliers. It has been used previously \citep{Liu2011} to regularize boosting algorithms successfully.\\
+
+\noindent Upon adding the distance metric, our optimization problem looks like: \\
+\begin{equation} \label{eq:1}
+\begin{aligned}
+& \underset{w}{\text{minimize}}
+& & \underbrace{\mathrm{f}(w)}_\text{t1} + \underbrace{\lambda \cdot d(w, w')}_\text{t2}\\
+\end{aligned}
+\end{equation}
+where,
+\begin{equation}
+\begin{aligned}
+%& \text{where}
+& & d(w, w') = \frac{\sum_{i=1}^{D} w_i \log \frac{w_i}{w'_i} }{ \sqrt{1 + \sum_{j=1}^D w'_j (1 + \log w'_j)^2 } } \\
+\end{aligned}
+\end{equation}
+
+\noindent Eqn (\ref{eq:1}), which is our overall objective function is now composed of two complementary forces - \textbf{t1} and \textbf{t2}. While t1 is our loss function that purely optimizes a ranking metric (such as NDCG on the current training data), t2 is the new distance measure which tries to maintain similarity with an existing (stable) historic model. In some sense, t2 plays a role similar to a standard regularizer term in standard regularized risk minimization problems \citep{le2007bundle}. \\
+
+\noindent Having this formulation in place (\ref{eq:1}), we can explore the two extreme cases from having a perfect historical model to not having one and see how we can parameterize our optimization.
+
+\begin{enumerate}
+\item When the historical model is not perfect (ie, noisy), then we do not have much to reuse from the past and therefore t2 in eqn (\ref{eq:1}) wouldn't really help us much. Infact, it could have adverse effects on our objective function lowering the quality of the solution we obtain. Therefore, we should assign a smaller multiplier value for it ($\lambda_{low}$).
+\item When the historical model is perfect, then the role of t2 becomes important as it can lead us get to a better quality solution. In this case, we assign a higher multiplier value for t2 ($\lambda_{high}$).
+\end{enumerate}
+
+\noindent Thus, by varying $\lambda$ from $\lambda_{low}$ to $\lambda_{high}$, we can balance these complemenatary terms. Furthermore, it will be useful to learn the optimal $\lambda$ ($\lambda_{optimal}$) so that the tradeoff between a) and b) is just about right for the learning task.
+
+\subsection{Moment based Regularizers}
+Another good way to adjust the regularizer in our risk minimization problem has been proposed in \citep{ruckert2011transfer} in the context of Transfer Learning. A regularizer is designed based on the source data which retains the favorable properties of $l_2$ regularization, but transfers information about the relevance of individual features from the source model into the current one. In general, features which receive large weights on the source dataset are also likely to be informative on the target (current) dataset. Thus, it makes sense to adjust the regularizer for the target learning task so that it encourages assignment of large weights to informative features and to penalize the assignment of large weights to features which have not received considerable attention on the source learning tasks (ie, on the historical data). Based on these ideas, a regularizer is proposed which uses the $qth$ moment of the source weights to assess feature relevance. More formally, the $qth$ moment is defined as: \\
+
+\begin{equation}
+\begin{aligned}
+& & \hat{\mu} = \frac{1}{p} \sum_{i=1}^{p} {\mid w^i\mid}^q  \\
+& & \mu =  E[{\mid w^1\mid}^q] = \cdots = E[{\mid w^p\mid}^q] \\
+\end{aligned}
+\end{equation}
+
+\noindent Here, $w^q = (w_1^q, \cdots, w_m^q)$ is meant to be elementwise power. Since the $w^i$ are i.i.d, the definition of $\mu$ can be made on the base of any of the $w^i$. As explained above, $\hat{\mu}$ measures how much information each component of $w^i$s has about the class label on average. For example, large components $\hat{\mu_j}$ correspond to large absolute values $\mid w_j^i \mid$, and hence the $jth$ feature is likely to be discriminative - it is thus suggestive to employ a regularizer that promotes features with large $\mu_j$. Also note that, the actual sign of the weight is not important, as the assignment of $+1$ and $-1$ to individual class labels is arbitrary and changes depending on the learning task at hand. Therefore, absolute values of the components $\mid w_j^i \mid$ are sufficient.\\
+
+\noindent Finally, the regularization term obtained can be formally written as: \\
+\begin{equation} \label{eq:4}
+\begin{aligned}
+& & B_b = \left\{ w \mid \| w \circ \hat{\mu}^{-1} \| \leq b \right\}, b > 0\\
+\end{aligned}
+\end{equation}
+
+\noindent Here, $\circ$ denotes the elementwise multiplication of vectors, and we employ the notation $w^{-1}$ to denote the elementwise inverse. Note that, $\| w \circ \hat{\mu}^{-1} \|$ is only a shorter way to write $\sqrt{\sum_{j=1}^{m} w_j^2/\hat{\mu}_j^2}$. Informally speaking, the regularizer (\ref{eq:4}) is an $l_2$-norm regularizer, where the dimensions are scaled according to the moment of the corresponding features in the source datasets. Using this regularizer, we can state the proposed transfer learning as an easy three step procedure:
+\begin{enumerate}
+\item Obtain good weight vector $w^i$ on the source data sets (eg: an existing model running in production).
+\item Compute the new regularizer $B_b$ from the moment of $w^i$.
+\item Add $B_b$ to the optimization problem and learn the target weight vector $\hat{w}$.
+\end{enumerate}
+
+% \section{Resolving feature scaling issues}
+% The training data is currently unnormalized and the features take on diverse range of values, due to which the tKL divergence measure is not uniformly applied to all the features. In order to prevent this, we perform zero-mean, unit-standard deviation feature scaling on the training data. But, we want to avoid scaling features while prediction time as we do not know how to estimate mean and standard deviation. We therefore try to understand if there is a relationship between the weights of a linear model obtained after feature scaling and the original one. This will help us do the prediction directly by mapping back our new weights. It turns out such a relationship exists as described below. \\
+
+% \noindent Let $X$ denote the unnormalized training data and $w$, $\hat{w}$ be the weights obtained by fitting a linear model over $X$ and its feature-scaled version $\frac{X-\mu}{\sigma}$ respectively. Then, the corresponding predictions are obtained by $\langle w,x \rangle$ and $\langle \hat{w},\frac{x-\mu}{\sigma} \rangle$. \\
+
+% \begin{equation} \label{eq:3}
+% \begin{aligned}
+% & & & & \langle \hat{w},\frac{x-\mu}{\sigma} \rangle=\frac{1}{\sigma} \langle \hat{w},x \rangle - \frac{\hat{w} \cdot \mu}{\sigma}\\
+% \end{aligned}
+% \end{equation}
+
+% \noindent Using Eqn(\ref{eq:3}), we can predict on unnormalized test data. It has to be noted though that this approach works only if the train and test data are from the same distribution.
+
+\section{Other related work}
+Transfer Learning is an area which addresses problems identical to the ones discussed in this paper. It explores methods that can improve the prediction function in a target domain using the knowledge gained in the source domain. The survey paper \citep{Pan2010} describes the area in much more detail. Different approaches to transfer learning which are relevant to the context of this paper include - 
+a) \textit{Feature-representation-transfer} which aims to find a good feature representation that reduces difference between the source and the target domains and the error of classification and regression models, b) \textit{Parameter-transfer} which discovers shared parameters or priors between the source domain and target domain models, which can aid in transfer learning.
+
+
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
+\end{document}

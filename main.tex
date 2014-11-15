@@ -1,0 +1,49 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[margin=0.7in]{geometry}
+\usepackage[numbers]{natbib}
+
+\title{Bayesian Models in Machine Learning}
+
+\author{}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\noindent My goal of writing this document is to highlight some fundamental concepts useful in  understanding Bayesian Statistics, and how it is applied in Machine Learning. I would like to provide some intuition behind the math that underlies it as I believe it is extremely useful to have a big picture of the connection between these important concepts.
+\end{abstract}
+
+\section{Bayes Theorem - It all starts here!}
+
+\noindent Most learning to rank systems such as the ones used in popular search companies do not have the luxury to learn a model offline from systematically collected training data. Part of this is because of the sheer volume of queries and results retrieved, but the other reason is that personalized results cannot be easily judged by third-party labellers. To overcome this, training data is built on the fly from user clicks. Such implicit feedback mechanisms however face issues like position bias, where users automatically tend to trust results presented at the higher position more than the ones below. Techniques such as Fair Pairs \citep{radlinski2006minimally} help in addressing this problem by obtaining relative feedback among pairs of results. Another key problem however remains unsolved, which is the issue of sample bias. Typically users only explore the first few pages (highly relevant segment) of the entire result-set, and thus the click feedback is obtained only for highly ranked results. This causes the training data to be heavily biased in terms of features. In other words, the learner only encounters results from a part of the feature space during the training, while the scorer sees all the results during prediction (and quite understandably doesn’t perform as well). \\
+
+\section{The Exponential Family - and why we simply love it!}
+\noindent Most learning to rank systems such as the ones used in popular search companies do not have the luxury to learn a model offline from systematically collected training data.
+
+\subsection{Conjugacy}
+
+\subsection{Connections to Convexity}
+
+\subsection{Robustness of Distributions}
+
+\section{Methods of Estimation}
+
+\section{Mixture Models}
+\subsection{K-Means as a simple example}
+\subsection{EM Algorithm}
+\subsection{Dirichlet Processes as Infinite Mixture Models}
+
+\section{Examples of Popular Bayesian Models}
+\subsection{Latent Dirichlet Allocation (LDA)}
+ 
+\bibliographystyle{plainnat}
+\bibliography{refs.bib}
+\end{document}
