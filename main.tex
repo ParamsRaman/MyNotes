@@ -3,30 +3,180 @@
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{graphicx}
 \usepackage[colorinlistoftodos]{todonotes}
 \usepackage[margin=0.7in]{geometry}
 \usepackage[numbers]{natbib}
 
-\title{Bayesian Models in Machine Learning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.10}
+%\newcommand\gauss[2]{1/(#2*sqrt(2*pi))*exp(-((x-#1)^2)/(2*#2^2))}
 
-\author{}
+%%This is all the fragment needed to use the URW Palladio Font
+\usepackage[sc]{mathpazo}
+\linespread{1.05}         % Palladio needs more leading (space between lines)
+\usepackage[T1]{fontenc}
+%% End of fragment
+
+\title{Bayesian Estimation explained in layman terms}
+
+\author{Author: Parameswaran Raman}
 
 \date{\today}
 
 \begin{document}
+
+\pgfmathdeclarefunction{gauss}{3}{%
+  \pgfmathparse{1/(#3*sqrt(2*pi))*exp(-((#1-#2)^2)/(2*#3^2))}%
+}
+
 \maketitle
 
 \begin{abstract}
-\noindent My goal of writing this document is to highlight some fundamental concepts useful in  understanding Bayesian Statistics, and how it is applied in Machine Learning. I would like to provide some intuition behind the math that underlies it as I believe it is extremely useful to have a big picture of the connection between these important concepts.
+\noindent This document tries to explain some of the jargons used in bayesian machine learning, providing some intuition behind the math that underlies it and connecting it to some frequentist interpretations.
 \end{abstract}
 
-\section{Bayes Theorem - It all starts here!}
+\section{Frequentist vs Bayesian: The distinction}
 
-\noindent Most learning to rank systems such as the ones used in popular search companies do not have the luxury to learn a model offline from systematically collected training data. Part of this is because of the sheer volume of queries and results retrieved, but the other reason is that personalized results cannot be easily judged by third-party labellers. To overcome this, training data is built on the fly from user clicks. Such implicit feedback mechanisms however face issues like position bias, where users automatically tend to trust results presented at the higher position more than the ones below. Techniques such as Fair Pairs \citep{radlinski2006minimally} help in addressing this problem by obtaining relative feedback among pairs of results. Another key problem however remains unsolved, which is the issue of sample bias. Typically users only explore the first few pages (highly relevant segment) of the entire result-set, and thus the click feedback is obtained only for highly ranked results. This causes the training data to be heavily biased in terms of features. In other words, the learner only encounters results from a part of the feature space during the training, while the scorer sees all the results during prediction (and quite understandably doesn’t perform as well). \\
+\noindent The goal of Machine Learning is to extract meaningful patterns from the data (this process is called \textit{learning}) so that the resulting knowledge can be used to make reasonable predictions on future unseen data. One of the biggest ongoing debates has been between the Frequentist and Bayesian approches to learning models and I would like to scratch the surface and present some basic differences in idealogies. I do not intend to go into depth and argue why one of them is better than the other or not, but merely present them as umbrellas under which one can gather the various approaches available, and draw connections between them.\\
+
+\noindent The data we are interested in looking at can be divided into two kinds - \textit{current data} and \textit{past data}. While \textit{frequentist} methods of learning focus on learning using only the \textbf{current data}, the \textit{bayesian} approach proposes including the \textbf{past data} along with the current data into the learning process. \\
+
+\noindent Lets look at a toy example before we get started. Assume that you are asked to estimate the prices of 10 sports jerseys of notable football clubs by looking at and examining them. Assuming they all have more or less similar characteristics, you will not exceedingly price one of them higher than the other. But, if you are given an additional piece of information that one of these football clubs were the winners of the World Cup tournament a month ago, there is an high chance you will go back and estimate a higher price for those. In other words, having additional background knowledge does tilt the scales while doing estimation. Loosely speaking, the former approach is analogous to \textit{frequentist} methods and the latter is similar to \textit{bayesian}.\\
+
+\noindent \textbf{Maximum Likelihood Estimation (MLE)} \\
+
+\noindent Let us look at how we would solve the problem (which is - "learning from the data" or "estimating" the parameters from the data) as a frequentist. This form of estimation is called \textit{Maximum Likelihood Estimation}. As we saw before, the frequentist only deals with the current data, which means we will use only the \textit{Likelihood}. We assume that current data is composed of $N$ observations (or data points) $x_1, x_2, \cdots , x_n$ which themselves come from some probability distribution say for example, the famous \textit{Gaussian Distribution} (also known as the \textit{normal distribution}) denoted as $\mathcal{N} (\mu,\sigma^2)$; which is a reasonable assumption to make in most (if not all) cases. Also note that, we could standardize (or normalize) any data by subtracting by its $\mu$ and dividing by its $\sigma$ to turn it into a gaussian distribution $\sim \mathcal{N} (0,1)$.  One last assumption we need to make is that each of these $N$ observations are independently and identically distributed (also called the i.i.d assumption) which means there is no relation between them and that they can be treated as independent random variables. Lets see how the Likelihood of our data should look like now:
+\begin{equation} \label{eq:4}
+\begin{aligned}
+& & Likelihood = P(x_1, x_2, \cdots, x_N|\mu, \sigma^2)\\
+& & = \prod\limits_{i=1}^{N} P(x_i|\mu, \sigma^2) \\
+&& = \prod\limits_{i=1}^{N} \frac{1}{\sigma \sqrt{2 \pi} } exp \left\{ - \frac{{(x_i-\mu)}^2} {2 \sigma^2} \right\} \\
+&& = \bigg( \frac{1}{\sigma \sqrt{2 \pi} } \bigg)^N exp \left\{ - \sum_{i=1}^{N}  \frac{ {(x_i-\mu)}^2} {2 \sigma^2} \right\} \\
+\end{aligned}
+\end{equation}
+
+
+\noindent Next, we want to find the parameters of this probability distribution $\mu$ and $\sigma$ that maximize the chance of occurrence of these $N$ observations. Recalling our calculus basics, we know that this can be achieved by taking the derivative of the Likelihood function. However, to make our calculations simpler, we work with the log of our likelihood function, and since $\log(.)$ is an increasing function, maximizing the log of a function will turn out to be the same as maximizing the function itself.
+
+\begin{equation} \label{eq:5}
+\begin{aligned}
+& & Log Likelihood = {\cal L}(\mu, \sigma) = - N \log{(\sigma \sqrt{2 \pi})} - \sum_{i=1}^{N}  \frac{ {(x_i-\mu)}^2} {2 \sigma^2} \\
+\end{aligned}
+\end{equation}
+
+\noindent Taking the derivative of ${\cal L}(\mu, \sigma)$ w.r.t $\mu$ and $\sigma^2$ and solving them after setting them to 0, we get the results:
+\begin{equation} \label{eq:6}
+\begin{aligned}
+& & \widehat{\mu} = \frac{1}{N} \sum_{i=1}^{N} x_n\\
+\end{aligned}
+\end{equation}
+and,
+\begin{equation} \label{eq:7}
+\begin{aligned}
+& & \widehat{\sigma^2} = \frac{1}{N} \sum_{i=1}^{N} (x_n - \widehat{\mu})^2\\
+\end{aligned}
+\end{equation}
+
+\noindent The values $\widehat{\mu}$ and $\widehat{\sigma^2}$ that we just obtained are called the \textit{maximum likelihood estimates} for the mean and variance. In short, these are the values of the parameters that we have been looking for. This whole method of calculating them is called \textit{Maximum Likelihood Estimation (MLE)}.\\
+
+\noindent \textit{What do equations (\ref{eq:6}) and (\ref{eq:7}) mean to us}?
+Observe that the MLE estimate we obtained for the mean is actually just the average of the $N$ observations (or their actual mean). Likewise is true for MLE of the variance. This is a typical characteristic of MLE estimation and holds true no matter what probability distribution (here we took Gaussian as an example) you assume the data comes from. For instance, when we describe an experiment about tossing a coin and observing the number of heads, the right choice of distribution to use would be the \textit{Bernoulli} distribution. Working out the MLE estimates in that case would also lead us to a similar conclusion. \\
+
+\noindent \textit{Whats wrong with this approach}? Consider the same example as above - \textit{the coin tossing experiment}, where we know that there is some mysterious underlying process (read as \textit{god}) that decides how many heads and tails should appear. By tossing the coin a fixed number of times, we want to find out what constitutes this blackbox process (or characteristics of such a god) using MLE. Now, if we toss the coin say 4 times and we see heads in all of them, using MLE estimate as given by eqn (6), we get the result $\frac{4}{4} = 1$, which means that the expected value of seeing a head is 1. This is totally absurd as we know we have only seen 4 observations. Thus, if we base our understanding of the generating process (or parameters of the blackbox) only using MLE, then we end up assuming that the blackbox will always give out heads, and this will lead to disastrous predictions on future data (as the coin is unbiased). Such a problem of fitting the current data very closely is called \textit{Overfitting}. \\
+
+\noindent \textit{Is that the end of the Frequentist?} Well, all hope is not lost yet for the frequentist. Depending on what he wants to do, he can make two choices - \textbf{continue to stay a frequentist} (and use techniques called \textit{regularization}\footnote{Regularization is a separate topic of discussion and hence ommitted here. But, nevertheless, it is connected to the bayesian way of solving the overfitting problem.} to control overfitting), or \textbf{convert himself into a bayesian}, thus opening up other ways to solve this problem. \\
+
+
+%\begin{center}
+%\begin{tikzpicture}
+%\centering
+
+%\begin{axis}[every axis plot post/.append style={
+%mark=none,
+%domain=-5:5,samples=50,smooth}, % All plots: from -2:2, 50 samples, smooth, no marks
+%axis lines*=left,
+%axis x line*=bottom, % no box around the plot, only x and y axis
+%axis y line*=left, % the * suppresses the arrow tips
+%enlargelimits=upper,
+%xtick=\empty,
+%ytick=\empty
+%] % extend the axes a bit to the right and top
+
+%\begin{axis}[
+%    no markers
+%  , domain=-7.5:25.5
+%  , samples=100
+%  , ymin=0
+%  , axis lines*=left
+%  , xlabel= 
+%   , every axis y label/.style={at=(current axis.above origin),anchor=south}
+%  , every axis x label/.style={at=(current axis.right of origin),anchor=west}
+%  , height=5cm
+%  , width=20cm
+%  , xtick=\empty
+%  , ytick=\empty
+%  , enlargelimits=false
+%  , clip=false
+%  , axis on top
+%  , grid = major
+%  , hide y axis
+%  , hide x axis
+%  ]
+%
+%
+%%\addplot {\gauss{0}{1}};
+%
+%\addplot[blue, ultra thick] {gauss(x, 0, 1.75)};
+%\pgfmathsetmacro\valueA{gauss(0, 0, 1.75)}
+%\draw [dashed, thick, blue] (axis cs:0, 0) -- (axis cs:0, \valueA);
+%\node[below] at (axis cs:0, -0.02)  {\Large \textcolor{blue}{$\mu_{1}$}}; 
+%\draw[thick, blue] (axis cs:-0.0, -0.01) -- (axis cs:0.0, 0.01);
+%\end{axis}
+%\end{tikzpicture}
+%\end{center}
+
+\noindent \textbf{Becoming a Bayesian:} \\
+
+\noindent As is obvious from the name, it relies on the \textbf{Bayes' Rule}. So, lets try to put it down mathematically and examine it more closely. \\
+
+\noindent Bayes' Rule described in a plain, boring way is:
+\begin{equation} \label{eq:1}
+\begin{aligned}
+& & P (X|Y) = \frac{ P(Y|X) P(X)}{P(Y)}\\
+\end{aligned}
+\end{equation}
+
+\noindent Since we are in the business of learning from data, ie. estimating the parameters using the given data, we can describe what we are doing, using eqn (\ref{eq:1}) as:
+\begin{equation} \label{eq:2}
+\begin{aligned}
+& & P (Parameters|Data) = \frac{ P(Data|Parameters) P(Parameters)}{P(Data)}\\
+\end{aligned}
+\end{equation}
+
+\noindent Now, lets examine the various terms in eqn (\ref{eq:2}). 
+\begin{itemize}
+\item $P(Data|Parameters)$ is also called the \textit{Likelihood} function (because it denotes the likelihood of occurrence of the current data given the parameters). This is the same likelihood that we tried to maximize earlier to arrive at the MLE estimates in the frequentist setting.
+\item $P(Parameters)$ is called the \textit{Prior} (and represents the signal from the past data that we want to leverage).
+\item the denominator in the RHS, is just a normalizing constant, which is necessary so that the overall quantity on the RHS remains a valid probability distribution. Recall that for a probability distribution to be valid, it must add up to one; and here we want the resulting LHS to also be a valid probability distribution.
+\item the LHS term is called the \textit{Posterior} and gives us a probability distribution of the parameters, and this is what will help us do the prediction on new data.
+\end{itemize}
+
+\noindent Using these key definitions, eqn (\ref{eq:2}) can be rewritten and that will be the main picture to always keep in mind while thinking about Bayesian Estimation:
+\begin{equation} \label{eq:3}
+\begin{aligned}
+& & Posterior = \frac{ Likelihood \times Prior}{Normalizing Constant}\\
+& & Posterior \propto Likelihood \times Prior \\
+\end{aligned}
+\end{equation}
+
+
 
 \section{The Exponential Family - and why we simply love it!}
 \noindent Most learning to rank systems such as the ones used in popular search companies do not have the luxury to learn a model offline from systematically collected training data.
+
+
 
 \subsection{Conjugacy}
 
