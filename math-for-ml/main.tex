@@ -9,6 +9,9 @@
 \usepackage[margin=0.7in]{geometry}
 \usepackage[numbers]{natbib}
 
+
+
+
 \newcommand{\argmin}{\operatornamewithlimits{arg\ min}}
 
 \usepackage{pgfplots}
@@ -21,7 +24,7 @@
 \usepackage[T1]{fontenc}
 %% End of fragment
 
-\title{Bayesian Estimation explained in layman terms}
+\title{Math for Machine Learning}
 
 \author{Author: Parameswaran Raman}
 
@@ -36,164 +39,96 @@
 \maketitle
 
 \begin{abstract}
-\noindent This document tries to explain some of the jargons used in bayesian machine learning, providing some intuition behind the math that underlies it and connecting it to some frequentist interpretations.
+\noindent In this post, I want to discuss some of the pre-requisites for Machine Learning (citing specific examples where they come up). I have given very high-level explanations below and cut corners at several places as I do not want to get into the depth. My intention here is not to explain any concept precisely, but to merely lay down enough of them on the table to emphasize the role of Mathematics.
 \end{abstract}
 
-\section{Frequentist vs Bayesian: The distinction}
+\section{So, why so much Math?}
 
-\noindent The goal of Machine Learning is to extract meaningful patterns from the data (this process is called \textit{learning}) so that the resulting knowledge can be used to make reasonable predictions on future unseen data. One of the biggest ongoing debates has been between the Frequentist and Bayesian approches to learning models and I would like to scratch the surface and present some basic differences in idealogies. I do not intend to go into depth and argue why one of them is better than the other or not, but merely present them as umbrellas under which one can gather the various approaches available, and draw connections between them.\\
+\noindent Machine Learning is an incredibly modern field that borrows heavily from several areas of Mathematics. Having evolved as an inter-disciplinary field which is very applied (driven by data), it has captured concepts, intuition and theory from several places. Being at such an intersection of diverse areas of mathematics and computer science is what makes research in Machine Learning so exciting and challenging! \\
 
-\noindent The data we are interested in looking at can be divided into two kinds - \textit{current data} and \textit{past data}. While \textit{frequentist} methods of learning focus on learning using only the \textbf{current data}, the \textit{bayesian} approach proposes including the \textbf{past data} along with the current data into the learning process. \\
+\noindent \textit{"Imagine being in a battlefield without knowing how to use the weapons you have, (or worse still, not having the weapons at all)!"} \\
 
-\noindent Lets look at a toy example before we get started. Assume that you are asked to estimate the prices of 10 sports jerseys of notable football clubs by looking at and examining them. Assuming they all have more or less similar characteristics, you will not exceedingly price one of them higher than the other. But, if you are given an additional piece of information that one of these football clubs were the winners of the World Cup tournament a month ago, there is an high chance you will go back and estimate a higher price for those. In other words, having additional background knowledge does tilt the scales while doing estimation. Loosely speaking, the former approach is analogous to \textit{frequentist} methods and the latter is similar to \textit{bayesian}.\\
+\noindent That's exactly how it feels when you set out to do research in this area without knowing enough about the fundamental areas underlying it. Without the right intuition, it becomes very hard to build new algorithms or extend existing ones.\\
 
-\noindent \textbf{Maximum Likelihood Estimation (MLE)} \\
+\noindent Below are the key useful areas:
 
-\noindent Let us look at how we would solve the problem (which is - "learning from the data" or "estimating" the parameters from the data) as a frequentist. This form of estimation is called \textit{Maximum Likelihood Estimation}. As we saw before, the frequentist only deals with the current data, which means we will use only the \textit{Likelihood}. We assume that current data is composed of $N$ observations (or data points) $x_1, x_2, \cdots , x_n$ which themselves come from some probability distribution say for example, the famous \textit{Gaussian Distribution} (also known as the \textit{normal distribution}) denoted as $\mathcal{N} (\mu,\sigma^2)$; which is a reasonable assumption to make in most (if not all) cases. Also note that, we could standardize (or normalize) any data by subtracting by its $\mu$ and dividing by its $\sigma$ to turn it into a gaussian distribution $\sim \mathcal{N} (0,1)$.  One last assumption we need to make is that each of these $N$ observations are independently and identically distributed (also called the i.i.d assumption) which means there is no relation between them and that they can be treated as independent random variables. Lets see how the Likelihood of our data should look like now:
-\begin{equation} \label{eq:4}
-\begin{aligned}
-& & Likelihood = P(x_1, x_2, \cdots, x_N|\mu, \sigma^2)\\
-& & = \prod\limits_{i=1}^{N} P(x_i|\mu, \sigma^2) \\
-&& = \prod\limits_{i=1}^{N} \frac{1}{\sigma \sqrt{2 \pi} } exp \left\{ - \frac{{(x_i-\mu)}^2} {2 \sigma^2} \right\} \\
-&& = \bigg( \frac{1}{\sigma \sqrt{2 \pi} } \bigg)^N exp \left\{ - \sum_{i=1}^{N}  \frac{ {(x_i-\mu)}^2} {2 \sigma^2} \right\} \\
-\end{aligned}
-\end{equation}
+\subsection{Algorithms \& Complexity}
+\textit{Knowledge of basic data structures such as arrays/trees/hash tables, programming techniques like dynammic programming, graphs, space and time complexity requirements for a given method, randomized algorithms, sublinear algorithms}.\\ \\
+How do you convince someone that your learning algorithm is more space and/or time efficient (and hence scalable) on big datasets? Exploiting sparsity in the data sets might lead you to better performing algorithms; but how do you qualitatively compare their performance? With data getting more and more massive, going through it entirely is not feasible and therefore sometimes even linear time algorithms maybe too slow. This has led to the field of sub-linear algorithms which work by inspecting only a tiny fraction of the entire data. Property Testing is a closely related topic where the algorithm queries about some property of the input with a time complexity much smaller than the size of the input. These are relatively modern areas in theoretical computer science which have a direct impact on machine learning. Randomized algorithms is another highly useful field that has helped solve several big data problems, for eg large matrix problems have been very successfully dealt with using randomization techniques.\\
 
+\subsection{Linear Algebra}
+\textit{Rank of a Matrix, Matrix Vector products, Column Spaces and Null Spaces of a matrix, Eigen Values and Vectors, SVD factorization of a matrix, positive-definiteness of a matrix}. \\ \\
+Linear Algebra plays a super heavy role in understanding Optimization methods used for Machine Learning. When the intermediate matrices used in optimization algorithms are positive-semidefinite, they offer a huge advantage in solving the optimization problem (as the function you are trying to minimize takes the shape of a parabola or a bowl in higher dimensions, and it clearly has only one unique global optimal solution). This concept is termed as "Convexity" and some of the topics I mentioned above constitute the nuts and bolts of Convex Optimization. Often although the data we obtain in the real world has very large dimensions (hundreds of thousands for example), it can often be reduced to a handful of useful dimensions that we can work with. This is called dimensionality reduction and uses ideas like low-rank approximation (rank of a data matrix determines the true dimensions of your data or how diverse your data can really be). Matrix Factorization methods are based on this and typical recommender systems like the one Netflix uses to predict movie ratings of a user make use of this. Low-rank approximations are also used in other areas like Computer Vision and Information Retrieval as a tool for extracting correlations in data and removing noise from matrix-structured data. Algorithms in machine learning involve dozens of vector-vector multiplications (dot-products) and matrix-vector, matrix-matrix multiplications. All of these operations can be extremely costly and a bottleneck when trying to scale to big data. However, if we can cleverly manipulate or take advantage of special matrices which contains lots of zeros ("sparsity"), we can reduce such computations significantly. Eigen Vectors of a matrix come in handy in such situations.\\
 
-\noindent Next, we want to find the parameters of this probability distribution $\mu$ and $\sigma$ that maximize the chance of occurrence of these $N$ observations. Recalling our calculus basics, we know that this can be achieved by taking the derivative of the Likelihood function. However, to make our calculations simpler, we work with the log of our likelihood function, and since $\log(.)$ is an increasing function, maximizing the log of a function will turn out to be the same as maximizing the function itself.
+\subsection{Probability Theory \& Statistics}
+\begin{itemize}
+\item Probability Theory: \textit{Counting and Combinatorial methods, Bayes' Theorem, Random Variables, Expection, Variance, Conditional and Joint Distributions, Moment Generating Functions, Exponential Family of Distributions}
+\item Statistics: \textit{Maximum Likelihood Estimation, MAP, Prior and Posterior, Sampling methods, Gibbs}
+\end{itemize}
+As you would expect, this is the single-most important field which also conveys the essence of machine learning, namely - estimating the parameters of the data-generating process. Several machine learning methods have probabilistic interpretations and its common to hear the words {\it frequentist} and {\it bayesian} ways of doing things. One way to look at the difference between them is that the frequentist methods are concerned with estimating the parameters of their model that have the highest chance of generating the "current data"; this is called the Maximum Likelihood Estimation (MLE) and written as: \\
 
-\begin{equation} \label{eq:5}
-\begin{aligned}
-& & Log Likelihood = {\cal L}(\mu, \sigma) = - N \log{(\sigma \sqrt{2 \pi})} - \sum_{i=1}^{N}  \frac{ {(x_i-\mu)}^2} {2 \sigma^2} \\
-\end{aligned}
-\end{equation}
-
-\noindent Taking the derivative of ${\cal L}(\mu, \sigma)$ w.r.t $\mu$ and $\sigma^2$ and solving them after setting them to 0, we get the results:
-\begin{equation} \label{eq:6}
-\begin{aligned}
-& & \widehat{\mu} = \frac{1}{N} \sum_{i=1}^{N} x_n\\
-\end{aligned}
-\end{equation}
-and,
-\begin{equation} \label{eq:7}
-\begin{aligned}
-& & \widehat{\sigma^2} = \frac{1}{N} \sum_{i=1}^{N} (x_n - \widehat{\mu})^2\\
-\end{aligned}
-\end{equation}
-
-\noindent The values $\widehat{\mu}$ and $\widehat{\sigma^2}$ that we just obtained are called the \textit{maximum likelihood estimates} for the mean and variance. In short, these are the values of the parameters that we have been looking for. This whole method of calculating them is called \textit{Maximum Likelihood Estimation (MLE)}.\\
-
-\noindent \textit{What do equations (\ref{eq:6}) and (\ref{eq:7}) mean to us}?
-Observe that the MLE estimate we obtained for the mean is actually just the average of the $N$ observations (or their actual mean). Likewise is true for MLE of the variance. This is a typical characteristic of MLE estimation and holds true no matter what probability distribution (here we took Gaussian as an example) you assume the data comes from. For instance, when we describe an experiment about tossing a coin and observing the number of heads, the right choice of distribution to use would be the \textit{Bernoulli} distribution. Working out the MLE estimates in that case would also lead us to a similar conclusion. \\
-
-\noindent \textit{Whats wrong with this approach}? Consider the same example as above - \textit{the coin tossing experiment}, where we know that there is some mysterious underlying process (read as \textit{god}) that decides how many heads and tails should appear. By tossing the coin a fixed number of times, we want to find out what constitutes this blackbox process (or characteristics of such a god) using MLE. Now, if we toss the coin say 4 times and we see heads in all of them, using MLE estimate as given by eqn (6), we get the result $\frac{4}{4} = 1$, which means that the expected value of seeing a head is 1. This is totally absurd as we know we have only seen 4 observations. Thus, if we base our understanding of the generating process (or parameters of the blackbox) only using MLE, then we end up assuming that the blackbox will always give out heads, and this will lead to disastrous predictions on future data (as the coin is unbiased). Such a problem of fitting the current data very closely is called \textit{Overfitting}. \\
-
-\noindent \textit{Is that the end of the Frequentist?} Well, all hope is not lost yet for the frequentist. Depending on which route he wants to take, he can do two things - \textbf{continue to stay a frequentist} (and use techniques called \textit{regularization}\footnote{Regularization is a separate topic of discussion and hence ommitted here. But, nevertheless, it is connected to the bayesian way of solving the overfitting problem.} to control overfitting), or \textbf{convert himself into a bayesian}, thus opening up other ways to solve this problem. \\
-
-
-%\begin{center}
-%\begin{tikzpicture}
-%\centering
-
-%\begin{axis}[every axis plot post/.append style={
-%mark=none,
-%domain=-5:5,samples=50,smooth}, % All plots: from -2:2, 50 samples, smooth, no marks
-%axis lines*=left,
-%axis x line*=bottom, % no box around the plot, only x and y axis
-%axis y line*=left, % the * suppresses the arrow tips
-%enlargelimits=upper,
-%xtick=\empty,
-%ytick=\empty
-%] % extend the axes a bit to the right and top
-
-%\begin{axis}[
-%    no markers
-%  , domain=-7.5:25.5
-%  , samples=100
-%  , ymin=0
-%  , axis lines*=left
-%  , xlabel= 
-%   , every axis y label/.style={at=(current axis.above origin),anchor=south}
-%  , every axis x label/.style={at=(current axis.right of origin),anchor=west}
-%  , height=5cm
-%  , width=20cm
-%  , xtick=\empty
-%  , ytick=\empty
-%  , enlargelimits=false
-%  , clip=false
-%  , axis on top
-%  , grid = major
-%  , hide y axis
-%  , hide x axis
-%  ]
-%
-%
-%%\addplot {\gauss{0}{1}};
-%
-%\addplot[blue, ultra thick] {gauss(x, 0, 1.75)};
-%\pgfmathsetmacro\valueA{gauss(0, 0, 1.75)}
-%\draw [dashed, thick, blue] (axis cs:0, 0) -- (axis cs:0, \valueA);
-%\node[below] at (axis cs:0, -0.02)  {\Large \textcolor{blue}{$\mu_{1}$}}; 
-%\draw[thick, blue] (axis cs:-0.0, -0.01) -- (axis cs:0.0, 0.01);
-%\end{axis}
-%\end{tikzpicture}
-%\end{center}
-
-\noindent \textbf{Becoming a Bayesian:} \\
-
-\noindent As is obvious from the name, it relies on the \textbf{Bayes' Rule}. So, lets try to put it down mathematically and examine it more closely. \\
-
-\noindent Bayes' Rule described in a plain, boring way is:
 \begin{equation} \label{eq:1}
 \begin{aligned}
-& & P (X|Y) = \frac{ P(Y|X) P(X)}{P(Y)}\\
+&& \underset{\theta}{\operatorname{argmax}} \log {\cal L } (\theta) = \underset{\theta}{\operatorname{argmax}} \log P(Data|Parameters)
 \end{aligned}
 \end{equation}
 
-\noindent Since we are in the business of learning from data, ie. estimating the parameters using the given data, we can describe what we are doing, using eqn (\ref{eq:1}) as:
+
+\noindent  MLE has the tendency to overfit (generalize poorly on unseen data) and hence the Bayesian approach proposes incorporating historical evidence (based on "past data") into the current model. This is called the prior. The task of estimation then boils down to using Bayes' rule as below: \\
+
 \begin{equation} \label{eq:2}
 \begin{aligned}
-& & P (Parameters|Data) = \frac{ P(Data|Parameters) P(Parameters)}{P(Data)}\\
+& & P (Parameters|Data) = \frac{ P(Data|Parameters) P(Parameters)}{P(Data)}
 \end{aligned}
 \end{equation}
 
-\noindent Now, lets examine the various terms in eqn (\ref{eq:2}). 
-\begin{itemize}
-\item $P(Data|Parameters)$ is also called the \textit{Likelihood} function (because it denotes the likelihood of occurrence of the current data given the parameters). This is the same likelihood that we tried to maximize earlier to arrive at the MLE estimates in the frequentist setting.
-\item $P(Parameters)$ is called the \textit{Prior} (and represents the signal from the past data that we want to leverage).
-\item the denominator in the RHS, is just a normalizing constant, which is necessary so that the overall quantity on the RHS remains a valid probability distribution. Recall that for a probability distribution to be valid, it must add up to one; and here we want the resulting LHS to also be a valid probability distribution.
-\item the LHS term is called the \textit{Posterior} and gives us a probability distribution of the parameters, and this is what will help us do the prediction on new data.
-\end{itemize}
-
-\noindent Using these key definitions, eqn (\ref{eq:2}) can be rewritten and that will be the main picture to always keep in mind while thinking about Bayesian Estimation:
+\noindent This can be equivalently written as : \\
 \begin{equation} \label{eq:3}
 \begin{aligned}
-& & Posterior = \frac{ Likelihood \times Prior}{Normalizing Constant}\\
-& & Posterior \propto Likelihood \times Prior \\
+& & Posterior = \frac{ Likelihood \times Prior}{Normalizing Constant}
 \end{aligned}
 \end{equation}
 
-\noindent Talk about pseudo-observations (they could be physical or otherwise), MAP, Bayesian Inference (including Predictive Distribution). Draw the picture showing the various types of inferences. Show gaussian plots of MLE (say MLE estimation is essentially just placing a peak over the data point), how prior changes the likelihood to obtain better posteriors. Give examples (or intuition) of how using a uniform prior makes bayesian methods look similar to MLE. Also, talk about the computational challenges involved in bayesian inference/methods. Mention that we are going to get into bit more depth into Bayesian Inference while discussing exponential families (hint: conjugacy and why it is useful). For now, maybe talk about a Bernoulli coin toss example again with prior stuff and show how it avoids overfitting. Good to also discuss how varying the number of points in current data we can increase or decrease the effect of prior.
+\noindent Posterior gives us a probability distribution over the parameters and this is used in various ways to make predictions on the new data. As is evident by now, random variables play a huge part in estimation and we often deal with independence assumptions between them, work with their expected values and variances. It is also important to know the functional forms of some key probability distributions, for instance the most popularly used {\it Gaussian Distribution} (or normal distribution) $\sim \mathcal{N} (\mu, \sigma^2)$, which (in its univariate form) can be expressed as: \\
 
-\section{The Exponential Family - and why we simply love it!}
-\noindent Most learning to rank systems such as the ones used in popular search companies do not have the luxury to learn a model offline from systematically collected training data.
+\begin{equation} \label{eq:4}
+\begin{aligned}
+& & \frac{1}{\sigma \sqrt{2 \pi}} \exp \left\{ - \frac{(x-\mu)^2}{2 \sigma^2} \right\}
+\end{aligned}
+\end{equation}
 
+\noindent Methods of Sampling play an important role in optimization algorithms. Often the gradient (generalization of the derivative - this has been described in a bit more detail further down below) needs to be calculated over the entire data set and this is very expensive to compute in every iteration. To avoid this, algorithms like Stochastic Gradient Descent (SGD) randomly sample a data point and update its gradient alone, this makes the algorithm independent of the number of data points which means it will scale well. But, now we only selected specific data points; so our method becomes a bit biased. How can we make sure randomly selecting one point in each iteration will in the long run mimic the same behavior that we would have got if we had selected all the data points and computed the exact gradient? This is where techniques of designing unbiased sampling mechanisms come up. \\
 
+\subsection{Linear Algebra}
+\textit{Concept of Partial-Derivatives, Gradient, Directional Gradient, Hessian, Calculus that involves vectors and matrices} \\ \\
+We know from our high-school calculus that in order to minimize or maximize a function you set its derivative to zero. Such a way of obtaining the solution is called the "closed-form" solution and this was an easy thing to do because back then, our functions then involved just handful of dimensions (often just a single variable). However, in machine learning its very common to deal with functions that operate on variables having hundreds of dimensions. What does derivative or slope even mean in such situations? That's where partial-derivatives come into the picture. You can look at them as derivatives of the function in each dimension of the variable. Combine these partial-derivatives into a vector and that gives us what is called the "Gradient". Similarly, taking the second-order derivative of Gradient gives us a matrix termed as the "Hessian". Also, in reality it is often not possible to obtain a "closed-form" solution (by setting the gradient to zero) because the dimensions of the gradient could be extremely high and storage/time required for this might be expensive. In such cases, knowledge of gradients and hessians help us define things like directions of descent and rate of descent which tell us how should we travel in our function space in order to get to the bottom most point (which represents the optimal solution). Thus at this point, we work using more abstract objects - "Vectors" and "Matrices" and should be reasonably comfortable with applying differential and integral calculus on them. This is also called "Vectorizing the equations", which Prof. Andrew Ng discusses in detail in one of his ML lectures (Refer Coursera). Below is an example of a simple objective function (linear regression with weights $x$, $N$ data points and $D$ dimensions) both in the vectorized and expanded notation. \\
 
-\subsection{Conjugacy}
+Expanded notation:
+\begin{equation} \label{eq:4}
+\begin{aligned}
+& & J(w) = \frac{1}{2} \sum_{i=1}^{N} (\sum_{j=1}^{D} a_{ij} x_j - b_i)^2
+\end{aligned}
+\end{equation}
 
-\subsection{Connections to Convexity}
+Vectorized notation:
+\begin{equation} \label{eq:5}
+\begin{aligned}
+& & J(w) = \frac{1}{2} \left\lVert \mathbf{A} \boldsymbol{x} - \boldsymbol{b} \right\rVert ^2
+\end{aligned}
+\end{equation}
 
-\subsection{Robustness of Distributions}
+\noindent As you can see the vectorized notation is not only compact and gets rid of the annoying summations but also is more expressive and makes us think more abstractly in terms of higher level objects like vectors (x and b) and matrices (A). Such representations also help us leverage all the rich properties that vectors and matrices provide us (that speed up our computation and make things easily parallelizable, to mention a few). What this also means is that, we need to now get comfortable with doing arithmetic in this new space. For instance, while moving terms around, we cannot divide by a matrix and instead have to compute the inverse (At this point, I should also mention that computing inverses of big matrices are expensive too and there are workarounds and techniques to deal with this). This is where having a good grip of linear algebra helps. \\
 
-\section{Mixture Models}
-\subsection{K-Means as a simple example}
-\subsection{EM Algorithm}
-\subsection{Dirichlet Processes as Infinite Mixture Models}
+\subsection{Real Analysis}
+\textit{Properties of Sets and Sequences, Convergence of Sequence, Cauchy Sequences, Concepts from Topology like Open and Closed Sets, Limits and Continuity of functions, Differentiability} \\ \\
+While this is the most rigorous of all mathematical fields I have mentioned, its importance is highly understated. For a person in Machine Learning, (quoting a friend of mine in his exact words) Real Analysis is a long-term investment. It gives you sufficient practice with the art of writing mathematics proofs in a rigorous manner and making precise statements without gaps and holes in your arguments. This is an extremely useful skill to acquire that helps you when writing and reading research papers. Although intuition and pictures are often good ways to describe and understand ideas; compressing them in a clear mathematical way is sometimes valuable as it avoids ambiguity. Analysis also helps one navigate more comfortably through some fundamental concepts in numerical optimization such as - sequences, what does it mean for a sequence to converge to a limit point, how do you define the rate of convergence, what does it mean for a sequence or set to have a \textit{sup} and \textit{inf}? While fields of Linear Algebra and Multi-variate calculus help you design optimization methods for machine learning, tools from Real Analysis will help you defend them and verify their correctness theoretically. \\
 
-\section{Examples of Popular Bayesian Models}
-\subsection{Latent Dirichlet Allocation (LDA)}
- 
+\subsection{Information Theory}
+\textit{Entropy, Mutual Information, Information Gain, KL Divergence} \\ \\
+This branch of applied mathematics deals with studying how to quantify information. Entropy for example quantifies the uncertainty involved in predicting the value of a random variable and intersects with other fields like Proability Theory. KL-Divergence is a widely used metric to measure how different two probability distributions are. \\
+
+\noindent For the sake of completeness, let me mention that there are few other areas such as {\it Differential Geometry} and {\it Measure Theory} which make cameo appearances once in a while, but the show is predominently run by the ones above!
+
 \bibliographystyle{plainnat}
 \bibliography{refs.bib}
 \end{document}
