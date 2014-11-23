@@ -9,6 +9,8 @@
 \usepackage[margin=0.7in]{geometry}
 \usepackage[numbers]{natbib}
 
+\newcommand{\argmin}{\operatornamewithlimits{arg\ min}}
+
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.10}
 %\newcommand\gauss[2]{1/(#2*sqrt(2*pi))*exp(-((x-#1)^2)/(2*#2^2))}
@@ -86,7 +88,7 @@ Observe that the MLE estimate we obtained for the mean is actually just the aver
 
 \noindent \textit{Whats wrong with this approach}? Consider the same example as above - \textit{the coin tossing experiment}, where we know that there is some mysterious underlying process (read as \textit{god}) that decides how many heads and tails should appear. By tossing the coin a fixed number of times, we want to find out what constitutes this blackbox process (or characteristics of such a god) using MLE. Now, if we toss the coin say 4 times and we see heads in all of them, using MLE estimate as given by eqn (6), we get the result $\frac{4}{4} = 1$, which means that the expected value of seeing a head is 1. This is totally absurd as we know we have only seen 4 observations. Thus, if we base our understanding of the generating process (or parameters of the blackbox) only using MLE, then we end up assuming that the blackbox will always give out heads, and this will lead to disastrous predictions on future data (as the coin is unbiased). Such a problem of fitting the current data very closely is called \textit{Overfitting}. \\
 
-\noindent \textit{Is that the end of the Frequentist?} Well, all hope is not lost yet for the frequentist. Depending on what he wants to do, he can make two choices - \textbf{continue to stay a frequentist} (and use techniques called \textit{regularization}\footnote{Regularization is a separate topic of discussion and hence ommitted here. But, nevertheless, it is connected to the bayesian way of solving the overfitting problem.} to control overfitting), or \textbf{convert himself into a bayesian}, thus opening up other ways to solve this problem. \\
+\noindent \textit{Is that the end of the Frequentist?} Well, all hope is not lost yet for the frequentist. Depending on which route he wants to take, he can do two things - \textbf{continue to stay a frequentist} (and use techniques called \textit{regularization}\footnote{Regularization is a separate topic of discussion and hence ommitted here. But, nevertheless, it is connected to the bayesian way of solving the overfitting problem.} to control overfitting), or \textbf{convert himself into a bayesian}, thus opening up other ways to solve this problem. \\
 
 
 %\begin{center}
