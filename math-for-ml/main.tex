@@ -42,7 +42,13 @@
 \noindent In this post, I want to discuss some of the pre-requisites for Machine Learning (citing specific examples where they come up). I have given very high-level explanations below and cut corners at several places as I do not want to get into the depth. My intention here is not to explain any concept precisely, but to merely lay down enough of them on the table to emphasize the role of Mathematics.
 \end{abstract}
 
-\section{So, why so much Math?}
+\section{Ok, why so much Math?}
+
+\begin{figure}[!htb]\label{fig:AngryMan}
+  \centering
+  \includegraphics[width=0.3\columnwidth]{Angry_man_Cartoon}\\
+  %\caption{"Set me free, please!!"}
+\end{figure}
 
 \noindent Machine Learning is an incredibly modern field that borrows heavily from several areas of Mathematics. Having evolved as an inter-disciplinary field which is very applied (driven by data), it has captured concepts, intuition and theory from several places. Being at such an intersection of diverse areas of mathematics and computer science is what makes research in Machine Learning so exciting and challenging! \\
 
@@ -90,8 +96,7 @@ f(x) & = \frac{1}{2} \boldsymbol{x}^T \mathbf{A} \boldsymbol{x} + \boldsymbol{q}
 \end{figure}
 As we can imagine, there is neither a global maximum or global minimum here. The surface infact looks like a "saddle" and for that reason called a saddle point.
 
-
-Often although the data we obtain in the real world has very large dimensions (hundreds of thousands for example), it can often be reduced to a handful of useful dimensions that we can work with. This is called dimensionality reduction and uses ideas like low-rank approximation (rank of a data matrix determines the true dimensions of your data or how diverse your data can really be). Matrix Factorization methods are based on this and typical recommender systems like the one Netflix uses to predict movie ratings of a user, make use of it. Low-rank approximations are also used in other areas like Computer Vision and Information Retrieval as a tool for extracting correlations in data and removing noise from matrix-structured data. Algorithms in machine learning involve dozens of vector-vector multiplications (dot-products) and matrix-vector, matrix-matrix multiplications. All of these operations can be extremely costly and a bottleneck when trying to scale to big data. However, if we can cleverly manipulate or take advantage of special matrices which contains lots of zeros ("sparsity"), we can reduce such computations significantly. Eigen Vectors of a matrix come in handy in such situations.\\
+\noindent Although the data we obtain in the real world has very large dimensions (hundreds of thousands for example), often it can often be reduced to a handful of useful dimensions that we can work with. This is called dimensionality reduction and uses ideas like low-rank approximation (rank of a data matrix determines the true dimensions of your data or how diverse your data can really be). Matrix Factorization methods are based on this and typical recommender systems like the one Netflix uses to predict movie ratings of a user, make use of it. Low-rank approximations are also used in other areas like Computer Vision and Information Retrieval as a tool for extracting correlations in data and removing noise from matrix-structured data. Algorithms in machine learning involve dozens of vector-vector multiplications (dot-products) and matrix-vector, matrix-matrix multiplications. All of these operations can be extremely costly and a bottleneck when trying to scale to big data. However, if we can cleverly manipulate or take advantage of special matrices which contains lots of zeros ("sparsity"), we can reduce such computations significantly. Eigen Vectors of a matrix come in handy in such situations.\\
 
 \subsection{Probability Theory \& Statistics}
 \begin{itemize}
